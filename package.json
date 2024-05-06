@@ -15,6 +15,8 @@
     "vite": "^5.0.11"
   },
   "dependencies": {
-    "babylonjs": "^6.38.0"
+    "babylonjs": "^6.38.0",
+    "colyseus.js": "^0.15.19",
+    "miniplex": "^2.0.0"
   }
 }
