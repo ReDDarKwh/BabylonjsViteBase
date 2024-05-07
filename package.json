@@ -2,7 +2,7 @@
   "name": "friends",
   "version": "0.0.0",
   "scripts": {
-    "dev": "vite --open",
+    "start": "vite --open",
     "build": "tsc && vite build",
     "preview": "tsc && vite build && vite preview --host --open"
   },
@@ -17,6 +17,7 @@
   "dependencies": {
     "babylonjs": "^6.38.0",
     "colyseus.js": "^0.15.19",
-    "miniplex": "^2.0.0"
+    "miniplex": "^2.0.0",
+    "rxjs": "^7.8.1"
   }
 }

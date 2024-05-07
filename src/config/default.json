@@ -1,0 +1,8 @@
+{
+    "input":{
+        "mappings":{
+            "debug":{"keyboard": ["Comma"]},
+            "dance":{"mouse": ["Left"]}
+        }
+    }
+}

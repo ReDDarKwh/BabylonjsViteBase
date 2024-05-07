@@ -1,22 +1,45 @@
+import * as B from "babylonjs";
+import { Query, With, World } from "miniplex";
+import { Input } from "./input/input";
+import { Entity } from "./ecs/entity";
 
-import * as B from 'babylonjs'
-import { Query, With, World } from "miniplex"
-
-type Entity = {
-    position?: { x: number; y: number; z: number },
-    node?: B.Node
-}
-
-export abstract class App{
-
+export abstract class App {
     world: World<Entity>;
     engine!: B.Engine;
     scene!: B.Scene;
     queries: {
         node: Query<With<Entity, "node">>;
+        physics: Query<With<Entity, "node" | "physics">>;
     };
+    input!: Input;
 
-    readonly canvas: HTMLCanvasElement
+    readonly canvas: HTMLCanvasElement;
+
+    constructor(canvas: HTMLCanvasElement) {
+        this.canvas = canvas;
+        this.world = new World();
+        this.queries = {
+            node: this.world.with("node"),
+            physics: this.world.with("node", "physics"),
+        };
+
+        this.queries.node.onEntityRemoved.subscribe(({ node }) => {
+            node.dispose();
+        });
+
+        this.queries.physics.onEntityAdded.subscribe(({ node, physics }) => {
+            
+            
+            const imposter = new BABYLON.PhysicsImpostor(
+                node.,
+                BABYLON.PhysicsImpostor.BoxImpostor,
+                { mass: 2, friction: 0.0, restitution: 0.3 },
+                node._scene
+            );
+
+
+        });
+    }
 
     static async createEngine(canvas: HTMLCanvasElement) {
         const webGPUSupported = await (B.WebGPUEngine as any).IsSupportedAsync;
@@ -28,28 +51,32 @@ export abstract class App{
         return new B.Engine(canvas, true);
     }
 
-    async init(){
-        this.engine = await App.createEngine(this.canvas) ;
-        window.addEventListener('resize', () => {
+    async init() {
+        this.engine = await App.createEngine(this.canvas);
+        window.addEventListener("resize", () => {
             this.engine.resize();
         });
+
+        this.input = new Input(this.engine);
         this.scene = new B.Scene(this.engine);
+
+        this.scene.enablePhysics(B.Vector3.Zero(), new B.AmmoJSPlugin());
+
+        this.input.getActionDownObservable("debug").subscribe(() => {
+            this.debug(!this.scene.debugLayer.isVisible());
+        });
+
+        this.scene.registerBeforeRender(this.internalBeforeRender);
+
         this.start(this.scene);
     }
 
-    abstract start(scene: B.Scene): void;
-    
-    constructor(canvas: HTMLCanvasElement) {
-        this.canvas = canvas;
-        this.world = new World();
-        this.queries = {
-            node: this.world.with("node")
-        };
-
-        this.queries.node.onEntityRemoved.subscribe(({node}) => {
-            node.dispose();
-        });
+    private internalBeforeRender() {
+        this.update();
     }
+
+    abstract start(scene: B.Scene): void;
+    abstract update(): void;
 
     debug(debugOn: boolean = true) {
         if (debugOn) {
@@ -61,7 +88,6 @@ export abstract class App{
 
     async run() {
         await this.init();
-        this.debug(true);
 
         this.engine.runRenderLoop(() => {
             this.scene.render();
